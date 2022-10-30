@@ -1,7 +1,9 @@
 package com.caowei.heartbeat;
 
 public interface HeartbeatCallback {
-    String onHeartbeat(HeartbeatPacket packet);
-    void onSuccess();
+    /**
+     * @return 心跳标识符
+     */
+    String onHeartbeat();
     void onFailed();
 }
