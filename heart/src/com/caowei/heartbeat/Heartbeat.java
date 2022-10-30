@@ -28,58 +28,66 @@ public class Heartbeat {
         return sInstance;
     }
 
-    private static final int curHeart = 30 * 1000;
-    private static final int timeout = 5 * 1000;
+    private static final int curHeart = 10 * 1000;
+    private static final int timeout = 3 * 1000;
     private final ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(3);
 
     private HeartbeatCallback mHeartbeatCallback;
 
-    public void setHeartbeatCallback(HeartbeatCallback callback) {
+    public void init(HeartbeatCallback callback) {
         mHeartbeatCallback = callback;
     }
 
-    private final Map<String, Long> mPacket = new HashMap<>();
+    private HeartTimer mHeartTimer;
+    private HeartTimerTask mHeartTimerTask;
 
     /**
-     * 当服务器连接成功之后开始心跳
+     * 开始心跳
      */
     public void start() {
-//        stop();
-        mExecutor.schedule(new Runnable() {
+        stop();
+        mHeartTimer = new HeartTimer();
+        mHeartTimerTask = new HeartTimerTask() {
             @Override
-            public void run() {
-                mExecutor.schedule(new Runnable() {
-                    @Override
-                    public void run() {
-                        //如果超时，则返回失败
-                        mHeartbeatCallback.onFailed();
-                    }
-                }, timeout, TimeUnit.MILLISECONDS);
-                //当心跳间隔到达时，触发发送心跳，并返回心跳消息的id
-                String mid = mHeartbeatCallback.onHeartbeat();
-                mPacket.put(mid, System.currentTimeMillis());
+            public void heartbeat() {
+                //心跳间隔到达
+                System.out.println("心跳触发");
+                mHeartbeatCallback.onHeartbeat();
             }
-        }, curHeart, TimeUnit.MILLISECONDS);
+
+            @Override
+            public void timeout() {
+                System.out.println("心跳超时");
+                //只需要告诉业务超时，至于业务是什么操作不关心
+                mHeartbeatCallback.onTimeout();
+            }
+        };
+        mHeartTimer.schedule(mHeartTimerTask, curHeart, timeout);
+        System.out.println("重启心跳");
     }
 
     /**
-     * 由于心跳包需要回执来验证结果，有延迟，所以需要子在收到回执的时候主动调用该方法，并返回mid
+     * 由于心跳包需要回执来验证结果，有延迟，所以需要子在收到回执的时候主动调用该方法
+     * 其实不用判断，因为超时已经决定了网络有问题，如果收到回执，那么说明网络是好的，需要重置计时器
+     * 如果在超时之前收到这条回执，那么也要重置计时器，
+     * 这个回执相当于都要重置计时器，所以该方法可以改名为onReceive，收到消息，手动重置计时器
      */
-    public void onReceipt(String mid) {
-        if (mPacket.containsKey(mid) && (System.currentTimeMillis() - mPacket.get(mid)) <= timeout) {
-            //心跳成功
-            start();
-            System.out.println("onSuccess");
-        } else {
-            //心跳失败
-            mHeartbeatCallback.onFailed();
-        }
+    public synchronized void onReceive() {
+        System.out.println("收到消息");
+        start();
     }
 
     /**
      * 停止当前心跳逻辑，是否要保持进度？？？
      */
     public void stop() {
-        mExecutor.shutdown();
+        if (mHeartTimer != null) {
+            mHeartTimer.cancel();
+            mHeartTimer = null;
+        }
+        if (mHeartTimerTask != null) {
+            mHeartTimerTask.cancel();
+            mHeartTimerTask = null;
+        }
     }
 }

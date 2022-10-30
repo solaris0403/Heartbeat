@@ -5,30 +5,29 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 public class Main {
-    private static Timer timer  = new Timer();
+    private static Timer timer = new Timer();
+
     public static void main(String[] args) {
-        MyHeartbeat myHeartbeat = new MyHeartbeat();
-        Heartbeat.getInstance().setHeartbeatCallback(myHeartbeat);
+        Heartbeat.getInstance().init(new MyHeartbeat());
         Heartbeat.getInstance().start();
     }
 
-    static class MyHeartbeat implements HeartbeatCallback{
-
+    static class MyHeartbeat implements HeartbeatCallback {
         @Override
         public String onHeartbeat() {
-            final String mid = UUID.randomUUID().toString();
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Heartbeat.getInstance().onReceipt(mid);
+                    Heartbeat.getInstance().onReceive();
                 }
-            }, 6 * 1000);//超时10s
-            return mid;
+            }, 4 * 1000);//超时10s
+            return null;
         }
 
         @Override
-        public void onFailed() {
-            System.out.println("onFailed");
+        public void onTimeout() {
+            System.out.println("重连服务器。。。");
+            System.out.println("重连服务器成功");
             Heartbeat.getInstance().start();
         }
     }
