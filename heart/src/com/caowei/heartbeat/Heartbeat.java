@@ -40,6 +40,7 @@ public class Heartbeat {
 
     private HeartTimer mHeartTimer;
     private HeartTimerTask mHeartTimerTask;
+    private long time;
 
     /**
      * 开始心跳
@@ -51,19 +52,19 @@ public class Heartbeat {
             @Override
             public void heartbeat() {
                 //心跳间隔到达
-                System.out.println("心跳触发");
+                System.out.println("心跳触发:" + DateUtil.getCurrentTime());
                 mHeartbeatCallback.onHeartbeat();
             }
 
             @Override
             public void timeout() {
-                System.out.println("心跳超时");
+                System.out.println("心跳超时:" + DateUtil.getCurrentTime());
                 //只需要告诉业务超时，至于业务是什么操作不关心
                 mHeartbeatCallback.onTimeout();
             }
         };
         mHeartTimer.schedule(mHeartTimerTask, curHeart, timeout);
-        System.out.println("重启心跳");
+        System.out.println("重启心跳:"+ DateUtil.getCurrentTime());
     }
 
     /**
@@ -73,7 +74,7 @@ public class Heartbeat {
      * 这个回执相当于都要重置计时器，所以该方法可以改名为onReceive，收到消息，手动重置计时器
      */
     public synchronized void onReceive() {
-        System.out.println("收到消息");
+        System.out.println("收到消息:" + DateUtil.getCurrentTime());
         start();
     }
 
