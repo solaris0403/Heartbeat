@@ -14,6 +14,8 @@ public class Heartbeat {
 
     //心跳包发出后超时时间
     public int timeout = 10 * 1000;
+    //距离失败的临界时间
+    public int critical = 10 * 1000;
     //当前心跳
     public int cur_heart = 10 * 1000;
     public int max_heart = 100 * 1000;
@@ -30,6 +32,8 @@ public class Heartbeat {
 
     private final AtomicInteger stabledSuccessCount = new AtomicInteger(0); //心跳连续成功的次数
     private final AtomicInteger stabledFailedCount = new AtomicInteger(0); //心跳连续失败的次数
+    public AtomicInteger stabledSuccessCount = new AtomicInteger(0); //心跳连续成功的次数
+    public AtomicInteger stabledFailedCount = new AtomicInteger(0); //心跳连续失败的次数
 
     public Heartbeat() {
         JsonObject object = JsonUtils.getInstance().getHeartbeatConfig();
