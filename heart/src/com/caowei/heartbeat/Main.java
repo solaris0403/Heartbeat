@@ -2,33 +2,32 @@ package com.caowei.heartbeat;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 public class Main {
-    private static Timer timer = new Timer();
-
+    static ServerDemo serverDemo = new ServerDemo();
     public static void main(String[] args) {
-        Heartbeat.getInstance().init(new MyHeartbeat());
-        Heartbeat.getInstance().start();
+        serverDemo.start();
+        HeartbeatScheduler.getInstance().init(new MyHeartbeat());
+        HeartbeatScheduler.getInstance().start();
     }
 
     static class MyHeartbeat implements HeartbeatCallback {
         @Override
-        public String onHeartbeat() {
+        public void onHeartbeat() {
+            serverDemo.receive();
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    Heartbeat.getInstance().onReceive();
+                    HeartbeatScheduler.getInstance().onReceive();
                 }
-            }, 4 * 1000);//超时10s
-            return null;
+            }, 2 * 1000);//超时10s
         }
 
         @Override
         public void onTimeout() {
             System.out.println("重连服务器。。。");
             System.out.println("重连服务器成功");
-            Heartbeat.getInstance().start();
+            HeartbeatScheduler.getInstance().start();
         }
     }
 }

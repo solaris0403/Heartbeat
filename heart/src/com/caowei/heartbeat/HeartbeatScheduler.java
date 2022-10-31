@@ -1,36 +1,36 @@
 package com.caowei.heartbeat;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 第一版，固定心跳
  */
-public class Heartbeat {
-    private static volatile Heartbeat sInstance;
+public class HeartbeatScheduler {
+    private static volatile HeartbeatScheduler sInstance;
 
-    private Heartbeat() {
+    private HeartbeatScheduler() {
     }
 
-    public static Heartbeat getInstance() {
+    public static HeartbeatScheduler getInstance() {
         if (sInstance == null) {
-            synchronized (Heartbeat.class) {
+            synchronized (HeartbeatScheduler.class) {
                 if (sInstance == null) {
-                    sInstance = new Heartbeat();
+                    sInstance = new HeartbeatScheduler();
                 }
             }
         }
         return sInstance;
     }
 
+    /**
+     * 当前使用的心跳间隔
+     */
     private static final int curHeart = 10 * 1000;
+    /**
+     * 发出心跳包之后的超时时间
+     */
     private static final int timeout = 3 * 1000;
-    private final ScheduledExecutorService mExecutor = Executors.newScheduledThreadPool(3);
 
     private HeartbeatCallback mHeartbeatCallback;
 
@@ -40,17 +40,16 @@ public class Heartbeat {
 
     private HeartTimer mHeartTimer;
     private HeartTimerTask mHeartTimerTask;
-    private long time;
 
     /**
      * 开始心跳
      */
-    public void start() {
+    public synchronized void start() {
         stop();
         mHeartTimer = new HeartTimer();
         mHeartTimerTask = new HeartTimerTask() {
             @Override
-            public void heartbeat() {
+            public void run() {
                 //心跳间隔到达
                 System.out.println("心跳触发:" + DateUtil.getCurrentTime());
                 mHeartbeatCallback.onHeartbeat();
@@ -64,7 +63,7 @@ public class Heartbeat {
             }
         };
         mHeartTimer.schedule(mHeartTimerTask, curHeart, timeout);
-        System.out.println("重启心跳:"+ DateUtil.getCurrentTime());
+        System.out.println("重启心跳:" + DateUtil.getCurrentTime());
     }
 
     /**

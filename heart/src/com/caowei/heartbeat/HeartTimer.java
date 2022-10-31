@@ -5,7 +5,7 @@ import java.util.TimerTask;
 
 public class HeartTimer extends Timer {
     /**
-     * 对定时任务添加超时时间
+     * 执行延迟任务
      *
      * @param task    task to be scheduled.
      * @param delay   delay in milliseconds before task is to be executed.
