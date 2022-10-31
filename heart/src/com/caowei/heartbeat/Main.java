@@ -18,9 +18,9 @@ public class Main {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    HeartbeatScheduler.getInstance().onReceive();
+                    HeartbeatScheduler.getInstance().onReceiveHeartbeat();
                 }
-            }, 2 * 1000);//超时10s
+            }, 3 * 1000);//超时10s
         }
 
         @Override
