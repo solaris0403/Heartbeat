@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ServerDemo {
+    public volatile boolean isAlive = false;
     private Timer timer;
     private TimerTask timerTask;
     public void start(){
@@ -19,14 +20,22 @@ public class ServerDemo {
         timerTask = new TimerTask() {
             @Override
             public void run() {
+                isAlive = false;
                 System.out.println("NAT超时");
             }
         };
-        timer.schedule(timerTask, 20 * 1000);
+        timer.schedule(timerTask, 30 * 1000);
+        isAlive = true;
     }
 
     public void receive(){
-        System.out.println("Server重置NAT");
+        if (isAlive){
+            System.out.println("Server重置NAT");
+            start();
+        }
+    }
+
+    public void login(){
         start();
     }
 }
