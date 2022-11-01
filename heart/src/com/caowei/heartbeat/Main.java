@@ -13,20 +13,17 @@ public class Main {
 
     static class MyHeartbeat implements HeartbeatCallback {
         @Override
-        public void onHeartbeat() {
-            serverDemo.receive();
-            if (serverDemo.isAlive){
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        HeartbeatScheduler.getInstance().onReceiveHeartbeat();
-                    }
-                }, 3 * 1000);//超时10s
-            }
+        public void onHeartbeat(long id) {
+            serverDemo.receive(new TimerTask() {
+                @Override
+                public void run() {
+                    HeartbeatScheduler.getInstance().onReceive(id);
+                }
+            });
         }
 
         @Override
-        public void onTimeout() {
+        public void onTimeout(long id) {
             System.out.println("重连服务器。。。");
             serverDemo.login();
             System.out.println("重连服务器成功。。。");

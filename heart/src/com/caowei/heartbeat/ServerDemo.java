@@ -21,17 +21,18 @@ public class ServerDemo {
             @Override
             public void run() {
                 isAlive = false;
-                System.out.println("NAT超时");
+                System.out.println("服务器NAT超时。。。。。。");
             }
         };
-        timer.schedule(timerTask, 30 * 1000);
+        timer.schedule(timerTask, 42 * 1000);
         isAlive = true;
     }
 
-    public void receive(){
+    public void receive(TimerTask timerTask){
         if (isAlive){
-            System.out.println("Server重置NAT");
+            System.out.println("服务器重置NAT。。。");
             start();
+            timer.schedule(timerTask, 3 * 1000);
         }
     }
 

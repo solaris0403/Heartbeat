@@ -1,93 +1,58 @@
 package com.caowei.heartbeat;
 
-import com.caowei.heartbeat.stage.AdjustStage;
 import com.caowei.heartbeat.stage.DichotomyStage;
 import com.caowei.heartbeat.stage.RiskStage;
 import com.caowei.heartbeat.stage.StableStage;
-import com.google.gson.JsonObject;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Heartbeat {
-    //心跳类型，0：初始类型，该阶段需要快速上涨，1，该阶段需要二分法判断，2稳定阶段，3智能阶段
-    public int heart_type = 0;
+    public volatile long heart_id = 0;
+    public byte heart_type = HeartConfig.HEART_TYPE_RISK;
+    public long cur_heart = HeartConfig.MIN_HEART;
+    public long cur_failed_heart = 0;
+    public long cur_success_heart = 0;
+    public long stable_success_heart = 0;
+    public long stable_failed_heart = 0;
 
-    //心跳包发出后超时时间
-    public int timeout = 10 * 1000;
-    //距离失败的临界时间
-    public int critical = 10 * 1000;
-    //当前心跳
-    public int cur_heart = 10 * 1000;
-    public int max_heart = 100 * 1000;
-    public int min_heart = 10 * 1000;
+    public HeartTreeSet history_success_heart = new HeartTreeSet(20);
+    public HeartTreeSet history_failed_heart = new HeartTreeSet(20);
 
-    public int max_success_heart = 0;
-    public int min_success_heart = 0;
+    public AtomicInteger successCount = new AtomicInteger(0);
+    public AtomicInteger failedCount = new AtomicInteger(0);
 
-    public int min_failed_heart = 0;
-    public int max_failed_heart = 0;
-
-    public int cur_failed_heart = 0;
-    public int cur_success_heart = 0;
-
-    private final AtomicInteger stabledSuccessCount = new AtomicInteger(0); //心跳连续成功的次数
-    private final AtomicInteger stabledFailedCount = new AtomicInteger(0); //心跳连续失败的次数
-    public AtomicInteger stabledSuccessCount = new AtomicInteger(0); //心跳连续成功的次数
-    public AtomicInteger stabledFailedCount = new AtomicInteger(0); //心跳连续失败的次数
-
-    public Heartbeat() {
-        JsonObject object = JsonUtils.getInstance().getHeartbeatConfig();
-    }
-
-    /**
-     * 如果心跳成功，则成功心跳+1，失败心跳置0
-     */
-    public void success() {
-        adjust(true);
-    }
-
-    /**
-     * 如果心跳失败，则失败心跳+1， 成功心跳置0
-     */
-    public void failed() {
-        adjust(false);
-    }
-
-    private void adjust(boolean result) {
+    //收到结果之后需要对心跳配置重新计算
+    public void update(boolean result) {
         switch (heart_type) {
-            case 0:
+            case HeartConfig.HEART_TYPE_RISK:
                 new RiskStage(this).onResult(result);
                 break;
-            case 1:
+            case HeartConfig.HEART_TYPE_DICHOTOMY:
                 new DichotomyStage(this).onResult(result);
                 break;
-            case 2:
+            case HeartConfig.HEART_TYPE_STABLE:
                 new StableStage(this).onResult(result);
-                break;
-            case 3:
-                new AdjustStage(this).onResult(result);
                 break;
             default:
                 break;
         }
+        //调整之后需要保存
     }
 
     @Override
     public String toString() {
         return "Heartbeat{" +
-                "heart_type=" + heart_type +
-                ", timeout=" + timeout +
+                "heart_id=" + heart_id +
+                ", heart_type=" + heart_type +
                 ", cur_heart=" + cur_heart +
-                ", max_heart=" + max_heart +
-                ", min_heart=" + min_heart +
-                ", max_success_heart=" + max_success_heart +
-                ", min_success_heart=" + min_success_heart +
-                ", min_failed_heart=" + min_failed_heart +
-                ", max_failed_heart=" + max_failed_heart +
                 ", cur_failed_heart=" + cur_failed_heart +
                 ", cur_success_heart=" + cur_success_heart +
-                ", stabledSuccessCount=" + stabledSuccessCount +
-                ", stabledFailedCount=" + stabledFailedCount +
+                ", stable_success_heart=" + stable_success_heart +
+                ", stable_failed_heart=" + stable_failed_heart +
+                ", history_success_heart=" + history_success_heart +
+                ", history_failed_heart=" + history_failed_heart +
+                ", successCount=" + successCount +
+                ", failedCount=" + failedCount +
                 '}';
     }
 }

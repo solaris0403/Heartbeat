@@ -1,6 +1,6 @@
 package com.caowei.heartbeat;
 
 public interface HeartbeatCallback {
-    void onHeartbeat();
-    void onTimeout();
+    void onHeartbeat(long id);
+    void onTimeout(long id);
 }

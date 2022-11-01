@@ -1,5 +1,6 @@
 package com.caowei.heartbeat.stage;
 
+import com.caowei.heartbeat.HeartConfig;
 import com.caowei.heartbeat.Heartbeat;
 import com.caowei.heartbeat.stage.Stage;
 
@@ -10,22 +11,23 @@ public class RiskStage extends Stage {
 
     @Override
     protected void success() {
-        System.out.println("success");
-        //当前成功心跳
-        heartbeat.cur_success_heart = heartbeat.cur_heart;
-        //下一次，二倍增涨
-        heartbeat.cur_heart = heartbeat.cur_heart * 2;
+        super.success();
+        //倍数增涨
+        heartbeat.cur_heart = (long) (heartbeat.cur_success_heart * HeartConfig.RISK_MULTIPLE);
     }
 
     @Override
     protected void failed() {
-        System.out.println("failed");
-        // TODO: 2022/10/31 如果第一次就失败？？？
-        //失败，记录当前失败
-        heartbeat.cur_failed_heart = heartbeat.cur_heart;
-        //修改stage
-        heartbeat.heart_type = 1;
-        //下一次，二分开启
-        heartbeat.cur_heart = (heartbeat.cur_failed_heart + heartbeat.cur_success_heart) / 2;
+        super.failed();
+        if (heartbeat.cur_failed_heart > heartbeat.cur_success_heart){
+            //进入下一阶段
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_DICHOTOMY;
+            heartbeat.cur_heart = (heartbeat.cur_failed_heart + heartbeat.cur_success_heart) / 2;
+        }else{
+            //减少时间
+            long down = (int) (heartbeat.cur_failed_heart / HeartConfig.RISK_MULTIPLE);
+            heartbeat.cur_heart = Math.max(HeartConfig.MIN_HEART, down);
+            System.out.println("RiskStage失败");
+        }
     }
 }

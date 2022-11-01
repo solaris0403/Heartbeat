@@ -1,5 +1,6 @@
 package com.caowei.heartbeat.stage;
 
+import com.caowei.heartbeat.HeartConfig;
 import com.caowei.heartbeat.Heartbeat;
 import com.caowei.heartbeat.stage.Stage;
 
@@ -10,24 +11,22 @@ public class DichotomyStage extends Stage {
 
     @Override
     protected void success() {
-        heartbeat.cur_success_heart = heartbeat.cur_heart;
-
-        if (heartbeat.cur_failed_heart - heartbeat.cur_success_heart > heartbeat.critical){
+        super.success();
+        if (heartbeat.cur_failed_heart - heartbeat.cur_success_heart > HeartConfig.CRITICAL){
             heartbeat.cur_heart = (heartbeat.cur_success_heart + heartbeat.cur_failed_heart) / 2;
         }else{
-            heartbeat.heart_type = 2;
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_STABLE;
         }
     }
 
     @Override
     protected void failed() {
-        heartbeat.cur_failed_heart = heartbeat.cur_heart;
-
-        if (heartbeat.cur_failed_heart - heartbeat.cur_success_heart > heartbeat.critical){
+        super.failed();
+        if (heartbeat.cur_failed_heart - heartbeat.cur_success_heart > HeartConfig.CRITICAL){
             heartbeat.cur_heart = (heartbeat.cur_success_heart + heartbeat.cur_failed_heart) / 2;
         }else{
             heartbeat.cur_heart = heartbeat.cur_success_heart;
-            heartbeat.heart_type = 2;
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_STABLE;
         }
     }
 }

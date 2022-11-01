@@ -1,0 +1,11 @@
+{
+    "heart_type": 0,
+    "timeout": 10,
+    "cur_heart": 270,
+    "max_success": 0,
+    "min_success": 0,
+    "min_failed": 0,
+    "max_failed": 0,
+    "cur_failed": 0,
+    "cur_success": 0
+}

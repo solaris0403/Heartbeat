@@ -6,8 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HeartTimer {
-    //等待回执、消息
-    public volatile boolean isWaiting = false;
     private Timer mTimer;
     private TimerTask mHeartbeatTask;
     private TimerTask mTimeoutTask;
@@ -20,30 +18,29 @@ public class HeartTimer {
      * @param task    task to be scheduled.
      */
     public void schedule(HeartTimerTask task) {
-        isWaiting = false;
+        mHeartbeat.heart_id = 0;
         mTimer = new Timer();
         mHeartbeatTask = new TimerTask() {
             @Override
             public void run() {
-                isWaiting = true;
-                task.heartbeat();
+                mHeartbeat.heart_id = System.currentTimeMillis();
+                task.heartbeat(mHeartbeat.heart_id);
             }
         };
         mTimeoutTask = new TimerTask() {
             @Override
             public void run() {
-                isWaiting = false;
-                mHeartbeat.failed();
-                task.timeout();
+                mHeartbeat.update(false);
+                task.timeout(mHeartbeat.heart_id);
+                mHeartbeat.heart_id = 0;
             }
         };
         mTimer.schedule(mHeartbeatTask, mHeartbeat.cur_heart);
-        mTimer.schedule(mTimeoutTask, mHeartbeat.cur_heart + mHeartbeat.timeout);
-        System.out.println(mHeartbeat.toString());
+        mTimer.schedule(mTimeoutTask, mHeartbeat.cur_heart + HeartConfig.TIMEOUT);
+        System.out.println("开始执行心跳：" + mHeartbeat.toString());
     }
 
     public void cancel() {
-        isWaiting = false;
         if (mTimer != null) {
             mTimer.cancel();
             mTimer = null;
@@ -56,12 +53,16 @@ public class HeartTimer {
             mTimeoutTask.cancel();
             mTimeoutTask = null;
         }
+        mHeartbeat.heart_id = 0;
     }
 
-    public void onReceiveHeartbeat(){
-        if (isWaiting){
-            //等待回执中
-            mHeartbeat.success();
+    /**
+     * 心跳回执
+     * @param id 心跳ID
+     */
+    public synchronized void onReceipt(long id){
+        if (id != 0 && id == mHeartbeat.heart_id){
+            mHeartbeat.update(true);
         }
     }
 }
