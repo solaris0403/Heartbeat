@@ -2,7 +2,6 @@ package com.caowei.heartbeat.stage;
 
 import com.caowei.heartbeat.HeartConfig;
 import com.caowei.heartbeat.Heartbeat;
-import com.caowei.heartbeat.stage.Stage;
 
 public class StableStage extends Stage {
     public StableStage(Heartbeat heartbeat) {
@@ -12,12 +11,14 @@ public class StableStage extends Stage {
     @Override
     protected void success() {
         super.success();
+        //成功回次，连续失败置0
+        heartbeat.failedCount.set(0);
         int successCount = heartbeat.successCount.incrementAndGet();
-        if (successCount >= HeartConfig.MAX_SUCCESS_COUNT){
-            //尝试增加时间
+        //多次成功，调整心跳，返回探测阶段
+        if (successCount >= HeartConfig.STABLE_SUCCESS_COUNT){
             heartbeat.successCount.set(0);
-            heartbeat.failedCount.set(0);
-            heartbeat.cur_heart += HeartConfig.HEART_ADJUST_STEP;
+            heartbeat.cur_heart += HeartConfig.HEART_DETECT_STEP;
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_DETECT;
         }
     }
 
@@ -25,12 +26,11 @@ public class StableStage extends Stage {
     protected void failed() {
         super.failed();
         int failedCount = heartbeat.failedCount.incrementAndGet();
-        if (failedCount >= HeartConfig.MAX_FAILED_COUNT){
-            //尝试减少时间
-            heartbeat.successCount.set(0);
+        //连续失败，返回探测阶段
+        if (failedCount >= HeartConfig.STABLE_FAILED_COUNT){
             heartbeat.failedCount.set(0);
-            long down = heartbeat.cur_heart - HeartConfig.HEART_ADJUST_STEP;
-            heartbeat.cur_heart = Math.max(down, HeartConfig.MIN_HEART);
+            heartbeat.successCount.set(0);
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_DETECT;
         }
     }
 }

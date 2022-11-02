@@ -2,10 +2,12 @@ package com.caowei.heartbeat.stage;
 
 import com.caowei.heartbeat.HeartConfig;
 import com.caowei.heartbeat.Heartbeat;
-import com.caowei.heartbeat.stage.Stage;
 
-public class DichotomyStage extends Stage {
-    public DichotomyStage(Heartbeat heartbeat) {
+/**
+ * 在成功和失败之间使用二分法定位最小成功心跳
+ */
+public class LocateStage extends Stage {
+    public LocateStage(Heartbeat heartbeat) {
         super(heartbeat);
     }
 
@@ -15,7 +17,7 @@ public class DichotomyStage extends Stage {
         if (heartbeat.cur_failed_heart - heartbeat.cur_success_heart > HeartConfig.CRITICAL){
             heartbeat.cur_heart = (heartbeat.cur_success_heart + heartbeat.cur_failed_heart) / 2;
         }else{
-            heartbeat.heart_type = HeartConfig.HEART_TYPE_STABLE;
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_DETECT;
         }
     }
 
@@ -26,7 +28,7 @@ public class DichotomyStage extends Stage {
             heartbeat.cur_heart = (heartbeat.cur_success_heart + heartbeat.cur_failed_heart) / 2;
         }else{
             heartbeat.cur_heart = heartbeat.cur_success_heart;
-            heartbeat.heart_type = HeartConfig.HEART_TYPE_STABLE;
+            heartbeat.heart_type = HeartConfig.HEART_TYPE_DETECT;
         }
     }
 }
